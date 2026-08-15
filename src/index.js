@@ -5,6 +5,8 @@ import { app } from "./app.js"
 dotenv.config({
     path: './.env'
 })
+
+const port = 
 connectDB()
     .then(() => {
         app.listen(process.env.PORT || 8000, () => {
