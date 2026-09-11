@@ -1,10 +1,8 @@
 // src / index.js: This is your main entry point.Its only job is to connect to the database(via the db folder) and then start the server(app.listen).
-import dotenv from "dotenv"
+import "dotenv/config";
 import connectDB from "./db/index.js"
 import { app } from "./app.js"
-dotenv.config({
-    path: './.env'
-})
+
 
 const port = 
 connectDB()

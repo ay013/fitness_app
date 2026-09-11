@@ -27,7 +27,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 const registeruser=asynchandler(async(req,res)=>{
 console.log("test");
-const {fullName,email,username,password}=req.body
+const {fullName,email,username,password,height,weight}=req.body
 // console.log(test2);
 
 // console.log(fullName);
@@ -50,12 +50,14 @@ const {fullName,email,username,password}=req.body
 
     }
 
-    const user=await User.create({
+    const user = await User.create({
         fullName,
         email,
         password,
-        username:username.toLowerCase()
-    })
+        username: username.toLowerCase(),
+        height: height || null, // Optional: will safely be null if not provided during signup
+        weight: weight || null  // Optional: will safely be null if not provided during signup
+    });
     const createuser=await User.findById(user._id).select(
       "  -password     -refreshToken" 
     )
@@ -117,6 +119,32 @@ const loginuser = asynchandler(async (req, res) => {
 
 
 })
+// Add this below your loginuser function
+const handleGoogleCallback = asynchandler(async (req, res) => {
+    // Passport automatically attaches the verified user to req.user
+    const user = req.user;
+
+    if (!user) {
+        throw new ApiError(401, "Google authentication failed");
+    }
+
+    // Generate tokens using your existing utility
+    const { accesstoken, refreshtoken } = await generateAccessAndRefreshTokens(user._id);
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    };
+
+    // For backend testing, we will just return the JSON. 
+    // Later, when you build a frontend, you will change this to res.redirect("http://localhost:3000/dashboard")
+    return res.status(200)
+        .cookie("accesstoken", accesstoken, options)
+        .cookie("refreshtoken", refreshtoken, options)
+        .json(
+            new ApiResponse(200, { user, accesstoken, refreshtoken }, "Google OAuth login successful")
+        );
+});
 const logout=asynchandler(async(req,res)=>{
     await User.findByIdAndUpdate(req.user._id,{
         $unset:{
@@ -135,4 +163,4 @@ return res.status(200).clearCookie("accessToken",options).clearCookie("refreshto
 }
 )
 
-export {registeruser,loginuser,logout}
+export {registeruser,loginuser,logout,handleGoogleCallback}
